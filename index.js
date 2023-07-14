@@ -24,14 +24,7 @@ let first_response = [];
 io.on('connection', (socket) => {
     console.log('A user connected');
     io.emit('message', first_response );
-    // Handle incoming socket messages
-    socket.on('message', (data) => {
-      const stock_index = NIFITY_FIFITY.indexOf( data );  
-      if ( stock_index > -1 ) {
-        index = stock_index;
-      }
-    });
-  
+    
     // Handle socket disconnections
     socket.on('disconnect', () => {
       console.log('A user disconnected');
@@ -40,8 +33,8 @@ io.on('connection', (socket) => {
 
 const getAPIData = async (symbol) => {
     try {
-        console.log("Fetching ", symbol , ' with index ', index , 'and hit constant is ', hit_constant );
-        if (index === NIFITY_FIFITY.length - 1) {
+        console.log(`Fetching  ${symbol} with index ${ index } and hit constant is ${ hit_constant} out of ${NIFITY_FIFITY.length - 1}` );
+        if (index > NIFITY_FIFITY.length - 1) {
             console.log(finalAnalytics);
             return;
         }
@@ -56,9 +49,12 @@ const getAPIData = async (symbol) => {
                 { data },
             ]
         ) => {
-            if (data === 'True') {
-                first_response.push( symbol );
-                io.emit('message', symbol);
+            if (data['isBullish']) {
+                first_response.push( data );
+                io.emit('message', { 
+                    ...data , 
+                    msg : `Stocks fetched ${ index } out of ${NIFITY_FIFITY.length - 1} with hit constant : ${hit_constant}`
+                } );
             }
             if (hit_constant > HIT_ROLLBACK) {
                 hit_constant = 5;

@@ -3,38 +3,51 @@
 <head>
   <title>Socket.io Client</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.2/socket.io.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
 </head>
 <body>
-  <h1>Stock list bullish</h1>
+  <h1 id="msg">Stock list bullish</h1>
   
-  <div id="message-container"></div>
-  
-  <form id="message-form">
-    <input type="text" id="message-input" placeholder="Enter your message" />
-    <button type="submit">Send</button>
-  </form>
-  
+  <div id="myGrid" style="height: 650px;" class="ag-theme-alpine"></div>
+   
   <script>
     const socket = io();
+    const msgHTML = document.getElementById("msg");
 
+    const columnDefs = [
+      { field: "symbol" },
+      { field: "DMA_20" },
+      { field: "DMA_50" },
+      { field: "DMA_100" },
+      { field: "DMA_200" },
+      { field: "rsi" },
+      { field: "price" },
+    ];
+
+    let rowData = [];
+
+    const gridOptions = {
+        columnDefs: columnDefs,
+        rowData: rowData
+      };
+    
     // Handle receiving messages
-    socket.on('message', (data) => {
-      const messageContainer = document.getElementById('message-container');
-      const messageElement = document.createElement('p');
-      messageElement.innerText = data;
-      messageContainer.appendChild(messageElement);
+    socket.on('message', ( data ) => {
+      console.log( data.length);
+      if ( data.length !== undefined ) {
+        rowData = data 
+      } else {
+        rowData.push( data );
+        msgHTML.innerHTML = data['msg'];
+      }
+      gridOptions.api.setRowData(rowData);
     });
 
-    // Handle form submission
-    const messageForm = document.getElementById('message-form');
-    const messageInput = document.getElementById('message-input');
-
-    messageForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const message = messageInput.value;
-      socket.emit('message', message);
-      messageInput.value = '';
+    document.addEventListener('DOMContentLoaded', () => {
+      const gridDiv = document.querySelector('#myGrid');
+      new agGrid.Grid(gridDiv, gridOptions);
     });
+  
   </script>
 </body>
 </html>
