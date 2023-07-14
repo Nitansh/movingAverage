@@ -51,11 +51,12 @@ const getAPIData = async (symbol) => {
         ) => {
             if (data['isBullish']) {
                 first_response.push( data );
-                io.emit('message', { 
-                    ...data , 
-                    msg : `Stocks fetched ${ index } out of ${NIFITY_FIFITY.length - 1} with hit constant : ${hit_constant}`
-                } );
+                
             }
+            io.emit('message', { 
+                ...data , 
+                msg : `Stocks fetched ${ index } out of ${NIFITY_FIFITY.length - 1} with hit constant : ${hit_constant} and shortlisted stock ${ first_response.length }`
+            } );
             if (hit_constant > HIT_ROLLBACK) {
                 hit_constant = 5;
             }

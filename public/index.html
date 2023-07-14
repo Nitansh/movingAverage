@@ -15,20 +15,27 @@
     const msgHTML = document.getElementById("msg");
 
     const columnDefs = [
-      { field: "symbol" },
-      { field: "DMA_20" },
-      { field: "DMA_50" },
-      { field: "DMA_100" },
-      { field: "DMA_200" },
-      { field: "rsi" },
-      { field: "price" },
+      { field: "symbol" , filter: 'agNumberColumnFilter'},
+      { field: "DMA_20" , filter: 'agNumberColumnFilter'},
+      { field: "DMA_50" , filter: 'agNumberColumnFilter'},
+      { field: "DMA_100", filter: 'agNumberColumnFilter' },
+      { field: "DMA_200", filter: 'agNumberColumnFilter' },
+      { field: "rsi" , filter: 'agNumberColumnFilter' },
+      { field: "price", filter: 'agNumberColumnFilter' },
     ];
 
     let rowData = [];
 
     const gridOptions = {
         columnDefs: columnDefs,
-        rowData: rowData
+        rowData: rowData,
+        defaultColDef: {
+          flex: 1,
+          minWidth: 150,
+          filter: 'agTextColumnFilter',
+          menuTabs: ['filterMenuTab'],
+        },
+        enableRangeSelection: true,
       };
     
     // Handle receiving messages
@@ -37,7 +44,9 @@
       if ( data.length !== undefined ) {
         rowData = data 
       } else {
-        rowData.push( data );
+        if ( data['isBullish'] ){
+          rowData.push( data );
+        }
         msgHTML.innerHTML = data['msg'];
       }
       gridOptions.api.setRowData(rowData);
