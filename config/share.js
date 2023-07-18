@@ -1,7 +1,7 @@
 module.exports =
     [
         "21STCENMGM"
-        ,"360ONE"
+        , "360ONE"
         , "3IINFOLTD"
         , "3MINDIA"
         , "5PAISA"
