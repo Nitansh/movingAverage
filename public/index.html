@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Socket.io Client</title>
+  <title>bullish</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.2/socket.io.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
 </head>
@@ -16,13 +16,23 @@
 
     const columnDefs = [
       { field: "symbol" , filter: 'agNumberColumnFilter'},
+      { field: "price", filter: 'agNumberColumnFilter' },
+      { field: "rsi" , filter: 'agNumberColumnFilter' },
       { field: "DMA_20" , filter: 'agNumberColumnFilter'},
       { field: "DMA_50" , filter: 'agNumberColumnFilter'},
       { field: "DMA_100", filter: 'agNumberColumnFilter' },
       { field: "DMA_200", filter: 'agNumberColumnFilter' },
-      { field: "rsi" , filter: 'agNumberColumnFilter' },
-      { field: "price", filter: 'agNumberColumnFilter' },
+      { field: "url" },
     ];
+
+    function onSelectionChanged() {
+      const selectedRows = gridOptions.api.getSelectedRows();
+      const url = selectedRows.length === 1 ? selectedRows[0].url : '';
+      console.log( url );
+      if ( url ) {
+        window.open( url )
+      }
+    }
 
     let rowData = [];
 
@@ -36,6 +46,8 @@
           menuTabs: ['filterMenuTab'],
         },
         enableRangeSelection: true,
+        rowSelection: 'single',
+        onSelectionChanged: onSelectionChanged,
       };
     
     // Handle receiving messages
