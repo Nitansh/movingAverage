@@ -24,7 +24,9 @@
       { field: "DMA_50", filter: 'agNumberColumnFilter' },
       { field: "DMA_100", filter: 'agNumberColumnFilter' },
       { field: "DMA_200", filter: 'agNumberColumnFilter' },
+      { field: "mcap", filter: 'agNumberColumnFilter' },
       { field: "url" },
+      { field: "name"},
     ];
 
     function onSelectionChanged() {
@@ -52,7 +54,15 @@
         minWidth: 150,
         filter: 'agTextColumnFilter',
         menuTabs: ['filterMenuTab'],
+        sortable : true,
+        enableValue: true,
+        enableRowGroup: true,
+        enablePivot: true,
       },
+      autoGroupColumnDef: {
+        minWidth: 200,
+      },
+      sideBar: 'columns',
       enableRangeSelection: true,
       rowSelection: 'single',
       onSelectionChanged: onSelectionChanged,
