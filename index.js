@@ -55,13 +55,12 @@ const getAPIData = async (symbol) => {
                     { data },
                 ]
             ) => {
-                if (data['isBullish']) {
+                if (data['isBullish'] || data['isBearish'] ) {
                     first_response.push(data);
-
                 }
                 io.emit('message', {
                     ...data,
-                    msg: `Stocks fetched ${index} out of ${NIFITY_FIFITY.length - 1} with hit constant : ${hit_constant} and shortlisted stock ${first_response.length}`
+                    msg: `Stocks fetched ${index} out of ${NIFITY_FIFITY.length - 1} with hit constant : ${hit_constant} , shortlisted bullish stock ${first_response.filter( ( { isBullish } ) => isBullish === 'true'  ).length}, shortlisted bearish stock ${first_response.filter( ( { isBearish } ) => isBearish === 'true'  ).length} `
                 });
                 if (hit_constant > HIT_ROLLBACK) {
                     hit_constant = 5;

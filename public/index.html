@@ -17,16 +17,18 @@
     const msgHTML = document.getElementById("msg");
 
     const columnDefs = [
-      { field: "symbol", filter: 'agNumberColumnFilter' },
-      { field: "price", filter: 'agNumberColumnFilter' },
-      { field: "rsi", filter: 'agNumberColumnFilter' },
-      { field: "DMA_20", filter: 'agNumberColumnFilter' },
-      { field: "DMA_50", filter: 'agNumberColumnFilter' },
-      { field: "DMA_100", filter: 'agNumberColumnFilter' },
-      { field: "DMA_200", filter: 'agNumberColumnFilter' },
-      { field: "mcap", filter: 'agNumberColumnFilter' },
-      { field: "url" },
       { field: "name"},
+      { field: "mcap", filter: 'agNumberColumnFilter' },
+      { field: "isBearish", filter: 'agSetColumnFilter' },
+      { field: "isBullish", filter: 'agSetColumnFilter' },
+      { field: "symbol", filter: 'agNumberColumnFilter', hide: true, },
+      { field: "price", filter: 'agNumberColumnFilter', hide: true, },
+      { field: "rsi", filter: 'agNumberColumnFilter', hide: true, },
+      { field: "DMA_20", filter: 'agNumberColumnFilter', hide: true, },
+      { field: "DMA_50", filter: 'agNumberColumnFilter', hide: true, },
+      { field: "DMA_100", filter: 'agNumberColumnFilter', hide: true, },
+      { field: "DMA_200", filter: 'agNumberColumnFilter', hide: true, },
+      { field: "url", hide: true, },
     ];
 
     function onSelectionChanged() {
@@ -62,7 +64,25 @@
       autoGroupColumnDef: {
         minWidth: 200,
       },
-      sideBar: 'columns',
+      sideBar: {
+            toolPanels: [
+                {
+                    id: "columns",
+                    labelDefault: "Columns",
+                    labelKey: "columns",
+                    iconKey: "columns",
+                    toolPanel: "agColumnsToolPanel",
+                },
+                {
+                    id: "filters",
+                    labelDefault: "Filters",
+                    labelKey: "filters",
+                    iconKey: "filter",
+                    toolPanel: "agFiltersToolPanel",
+                },
+            ],
+            defaultToolPanel: "",
+      },
       enableRangeSelection: true,
       rowSelection: 'single',
       onSelectionChanged: onSelectionChanged,
@@ -78,7 +98,7 @@
         rowData = data
         gridOptions.api.setRowData(rowData);
       } else {
-        if (data['isBullish']) {
+        if (data['isBullish'] || data['isBearish'] ) {
           buffer.push(data)
           if (buffer.length > buffer) {
             rowData.concat(buffer);
