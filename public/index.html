@@ -11,10 +11,48 @@
   <h1 id="msg">Stock list bullish</h1>
   <button onclick="fetchData()">Refresh</button>
   <button onclick="onBtExport()">Export</button>
+  <button onclick="onRestart()">Restart</button>
+
+  <label for="bullish-select">Bullish</label>
+
+  <select name="bullish" id="bullish-select">
+    <option value="1">1</option>
+    <option value="2">2</option>
+    <option value="3">3</option>
+    <option value="4">4</option>
+    <option value="5">5</option>
+    <option value="6">6</option>
+    <option value="7">7</option>
+    <option value="8">8</option>
+    <option value="9">9</option>
+    <option value="10">10</option>
+  </select>
+
+  <label for="bearish-select">Bearish</label>
+
+  <select name="bearish-select" id="bearish-select">
+    <option value="5">5</option>
+    <option value="6">6</option>
+    <option value="7">7</option>
+    <option value="8">8</option>
+    <option value="9">9</option>
+    <option value="10">10</option>
+  </select>
+
+  <label for="time-select">Time Delta</label>
+
+  <select name="time-select" id="time-select">
+    <option value="1">1</option>
+    <option value="0">0</option>
+  </select>
+
   <div id="myGrid" style="height: 650px;" class="ag-theme-alpine"></div>
   <script>
     const socket = io();
     const msgHTML = document.getElementById("msg");
+    const bearishChangeHTML =  document.getElementById("bearish-select");
+    const bullishChangeHTML =  document.getElementById("bullish-select");
+    const timeDeltaHTML = document.getElementById("time-select");
 
     const columnDefs = [
       { field: "name"},
@@ -39,6 +77,27 @@
         window.open(url)
       }
     }
+
+    bearishChangeHTML.onchange = function(){
+      var value = bearishChangeHTML.value;
+      socket.emit( 'bearish', value);
+      gridOptions.api.setRowData([]);
+      buffer = [];
+    };
+
+    timeDeltaHTML.onchange = function(){
+      var value = timeDeltaHTML.value;
+      socket.emit( 'timedelta', value);
+      gridOptions.api.setRowData([]);
+      buffer = [];
+    };
+
+    bullishChangeHTML.onchange = function(){
+      var value = bullishChangeHTML.value;
+      socket.emit( 'bullish', value);
+      gridOptions.api.setRowData([]);
+      buffer = [];
+    };
 
     function fetchData() {
       socket.emit('message', '');
@@ -90,6 +149,12 @@
 
     function onBtExport() {
       gridOptions.api.exportDataAsExcel();
+    }
+
+    function onRestart(){
+      socket.emit('restart', '');
+      gridOptions.api.setRowData([]);
+      buffer = [];
     }
 
     // Handle receiving messages
