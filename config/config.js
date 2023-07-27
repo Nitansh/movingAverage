@@ -1,4 +1,4 @@
-const SERVER_URL = '127.0.0.1' // for local development use 127.0.0.1 for production flask-nsea-app
+const SERVER_URL = '127.0.0.1' // for local development use 127.0.0.1 for production flask-nse-app
 const SERVER_PORT = '5000'
 
 module.exports = {

@@ -25,58 +25,6 @@ let priceDiff = 1;
 let priceDiffBullish = 5;
 let timeDelta = 1;
 
-io.on('connection', (socket) => {
-    io.emit('message', first_response);
-
-    socket.on('message', (data) => {
-        io.emit('message', first_response);
-    });
-
-    socket.on('disconnect', () => {
-        console.log('A user disconnected');
-    });
-
-    socket.on('bullish', ( data )=> {
-        console.log( "message recieved bullish" );
-        priceDiff = data;
-        first_response = [];
-        index =0;
-        hit_constant = 0;
-    });
-
-    socket.on('timedelta', ( data )=> {
-        console.log( "message recieved bullish" );
-        timeDelta = data;
-        restart();
-    });
-
-    socket.on('bearish', ( data )=> {
-        console.log( "message recieved bearish" );
-        priceDiffBullish = data;
-        restart();
-    });
-
-    socket.on( 'restart', ()=>{
-        console.log( "message recieved restart" );
-        restart();
-    } )
-
-});
-
-const restart = () => {
-    first_response = [];
-    index =0;
-    hit_constant = 0;
-    if ( !once ) {
-        once = true;
-        (async () => {
-            await getAPIData(NIFITY_FIFITY[index]);
-        })()
-    }
-}
-
-
-
 const getAPIData = async (symbol) => {
     if (symbol) {
         try {
@@ -137,6 +85,53 @@ const getAPIData = async (symbol) => {
     }
 }
 
+
+const restart = () => {
+    console.log( "message recieved restart" );
+    first_response = [];
+    index =0;
+    hit_constant = 0;
+    (async () => {
+        await getAPIData(NIFITY_FIFITY[index]);
+    })()
+}
+
+
+io.on('connection', (socket) => {
+    io.emit('message', first_response);
+
+    socket.on('message', (data) => {
+        io.emit('message', first_response);
+    });
+
+    socket.on('disconnect', () => {
+        console.log('A user disconnected');
+    });
+
+    socket.on('bullish', ( data )=> {
+        console.log( "message recieved bullish" );
+        priceDiff = data;
+        restart();
+    });
+
+    socket.on('timedelta', ( data )=> {
+        console.log( "message recieved bullish" );
+        timeDelta = data;
+        restart();
+    });
+
+    socket.on('bearish', ( data )=> {
+        console.log( "message recieved bearish" );
+        priceDiffBullish = data;
+        restart();
+    });
+
+    socket.on( 'restart', ()=>{
+        console.log( "message recieved restart" );
+        restart();
+    } )
+
+});
 
 server.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
