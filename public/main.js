@@ -1,3 +1,7 @@
+const SELECTED_STOCKS_KEY = "selectedStocks";
+
+initStorage();
+
 let rowData = [];
 let buffer = [];
 let buffer_size = 10;
@@ -7,8 +11,9 @@ const msgHTML = document.getElementById("msg");
 const bearishChangeHTML =  document.getElementById("bearish-select");
 const bullishChangeHTML =  document.getElementById("bullish-select");
 const timeDeltaHTML = document.getElementById("time-select");
+
 const columnDefs = [
-  { field: "name"},
+  { field: "name", checkboxSelection: true},
   { field: "mcap", filter: 'agNumberColumnFilter' },
   { field: "isBearish", filter: 'agSetColumnFilter' },
   { field: "isBullish", filter: 'agSetColumnFilter' },
@@ -58,9 +63,23 @@ const gridOptions = {
           defaultToolPanel: "",
     },
     enableRangeSelection: true,
-    rowSelection: 'single',
-    onSelectionChanged: onSelectionChanged,
+    rowSelection: 'multiple',
+    suppressRowClickSelection: true,
+    onCellDoubleClicked: function (params) {
+        const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/;
+        const cellValue = params.value;
+        if (urlRegex.test(cellValue)) {
+          // Cell value is a valid URL, open it in a new tab or window.
+          window.open(cellValue, '_blank');
+        }
+    }
 };
+
+function initStorage() {
+    if ( localStorage.getItem( SELECTED_STOCKS_KEY ) === null ){
+        localStorage.setItem( SELECTED_STOCKS_KEY , JSON.stringify([]));
+    }
+}
 
 function onSelectionChanged() {
   const selectedRows = gridOptions.api.getSelectedRows();
@@ -69,6 +88,18 @@ function onSelectionChanged() {
   if (url) {
     window.open(url)
   }
+}
+
+function addWatchList() {
+    localStorage.setItem(
+        SELECTED_STOCKS_KEY,
+        JSON.stringify(
+            gridOptions.api.getSelectedRows().map( ( { symbol, price } ) => {
+            return { symbol , price }
+            })
+        )
+    );
+    gridOptions.api.deselectAll();
 }
 
 function fetchData() {
