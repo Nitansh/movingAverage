@@ -12,6 +12,7 @@ const {
     PORT,
     DMA,
     FININACIAL_SERVER_URL,
+    LIVE_STOCK_URL,
     HIT_ROLLBACK,
 } = require("./config/config.js");
 
@@ -96,6 +97,23 @@ const restart = () => {
     })()
 }
 
+const fetchLivePrice = ( symbol ) => {
+    const currentDataPromise = axios.get(LIVE_STOCK_URL, {
+        params: {
+            symbol,
+        }
+    })
+    Promise.all([currentDataPromise]).then((
+        [
+            { data },
+        ]
+    ) => {
+        console.log( data );
+        io.emit('ticker', data)
+    }).catch(({ cause }) => {
+        console.log(cause);
+    })
+}
 
 io.on('connection', (socket) => {
     io.emit('message', first_response);
@@ -107,6 +125,10 @@ io.on('connection', (socket) => {
     socket.on('disconnect', () => {
         console.log('A user disconnected');
     });
+
+    socket.on('ticker', ( data ) => {
+        fetchLivePrice( data );
+    })
 
     socket.on('bullish', ( data )=> {
         console.log( "message recieved bullish" );

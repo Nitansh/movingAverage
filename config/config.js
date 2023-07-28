@@ -5,5 +5,6 @@ module.exports = {
     PORT: 3000,
     DMA: ['DMA_20', 'DMA_50', 'DMA_100', 'DMA_200'],
     FININACIAL_SERVER_URL: `http://${SERVER_URL}:${SERVER_PORT}/price_diff`,
+    LIVE_STOCK_URL : `http://${SERVER_URL}:${SERVER_PORT}/live`,
     HIT_ROLLBACK: 3
 }
