@@ -3,10 +3,13 @@ const express = require('express');
 const http = require('http');
 const socketIO = require('socket.io');
 
+const fs = require('fs');
+
 const app = express();
 const server = http.createServer(app);
 const io = socketIO(server);
 
+const { insert, getData } = require("./db.js")
 const NIFITY_FIFITY = require("./config/share.js");
 const {
     PORT,
@@ -48,7 +51,8 @@ const getAPIData = async (symbol) => {
                     { data },
                 ]
             ) => {
-                if (data['isBullish'] || data['isBearish'] ) {
+                insert( data )
+                if ( data['isBullish'] || data['isBearish'] ) {
                     first_response.push(data);
                 }
                 io.emit('message', {
@@ -166,6 +170,17 @@ app.get('/', (req, res) => {
     });
 });
 
-(async () => {
+app.get('/mongoDB', (req, res) => {
+    fs.readFile(__dirname + '/public/mongo.html', 'utf8', (err, text) => {
+        res.send(text);
+    });
+});
+
+// Create a route to fetch data with a filter
+app.get('/api/mongoDB', async (req, res) => {
+    getData( { isBullish : 'true' }, req, res )
+});
+
+( async() => {
     await getAPIData(NIFITY_FIFITY[index]);
 })() 

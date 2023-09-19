@@ -106,6 +106,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     socket.on('ticker', ( data ) => {
         const rowNode = tickerGridOptions.api.getRowNode(data.symbol);
-        rowNode.setData(data)
+        rowNode.setData({
+            ...rowNode.data,
+            ...data,
+        })
     });
 });

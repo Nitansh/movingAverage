@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>bullish</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.2/socket.io.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ag-grid-enterprise@30.0.3/dist/ag-grid-enterprise.min.js"></script>
+</head>
+
+<body>
+  <h1 id="msg">Stock list bullish</h1>
+  <button onclick="fetchData()">Refresh</button>
+  <button onclick="onBtExport()">Export</button>
+  <div id="myCacheGrid" style="height: 650px;" class="ag-theme-alpine"></div>
+  <script src="./main.js"></script>
+</body>
+
+</html>

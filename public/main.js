@@ -75,6 +75,8 @@ const gridOptions = {
     }
 };
 
+const cacheGridOptions = { ...gridOptions };
+
 function initStorage() {
     if ( localStorage.getItem( SELECTED_STOCKS_KEY ) === null ){
         localStorage.setItem( SELECTED_STOCKS_KEY , JSON.stringify([]));
@@ -91,15 +93,16 @@ function onSelectionChanged() {
 }
 
 function addWatchList() {
+    const previousList = JSON.parse(localStorage.getItem( SELECTED_STOCKS_KEY )) || [];
+    const newList = gridOptions.api.getSelectedRows().map( ( { symbol, price, DMA_20, DMA_50 } ) => {
+      return { symbol , price, DMA_20, DMA_50 }
+      });
     localStorage.setItem(
         SELECTED_STOCKS_KEY,
-        JSON.stringify(
-            gridOptions.api.getSelectedRows().map( ( { symbol, price } ) => {
-            return { symbol , price }
-            })
-        )
+        JSON.stringify( newList.concat( previousList ) )
     );
     gridOptions.api.deselectAll();
+    tickerGridOptions.api.setRowData( getUpdateStocks() )
 }
 
 function fetchData() {
@@ -137,6 +140,29 @@ socket.on('message', (data) => {
 document.addEventListener('DOMContentLoaded', () => {
   const gridDiv = document.querySelector('#myGrid');
   new agGrid.Grid(gridDiv, gridOptions);
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  const gridDiv = document.querySelector('#myCacheGrid');
+  new agGrid.Grid(gridDiv, cacheGridOptions);
+  fetch("/api/mongoDB")
+  .then(response => {
+    // Check if the response status is OK (status code 200)
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    // Parse the response body as JSON
+    return response.json();
+  })
+  .then(data => {
+    // Handle the JSON data
+    console.log( data );
+    cacheGridOptions.api.setRowData(data);
+  })
+  .catch(error => {
+    // Handle errors
+    console.error('Fetch error:', error);
+  });
 });
 
 bearishChangeHTML.onchange = function(){
