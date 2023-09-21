@@ -30,6 +30,8 @@ module.exports.insert = async function insert( document ){
         await client.connect();
         db = client.db(dbName);
         collection = db.collection('stocks');
+        const isBullish = document.isBullish ? document.isBullish : false;
+        document.isBullish = isBullish;
         const updateOperation = {
             $set: document,
         };
