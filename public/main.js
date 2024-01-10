@@ -12,24 +12,31 @@ const bearishChangeHTML =  document.getElementById("bearish-select");
 const bullishChangeHTML =  document.getElementById("bullish-select");
 const timeDeltaHTML = document.getElementById("time-select");
 
+function getPrecisionValue( params ){
+  return params.value.toFixed(2);;
+}
+
 const columnDefs = [
+  { field: "id", hide : true },
   { field: "name", checkboxSelection: true},
   { field: "mcap", filter: 'agNumberColumnFilter' },
-  { field: "isBearish", filter: 'agSetColumnFilter' },
-  { field: "isBullish", filter: 'agSetColumnFilter' },
+  { field: "isBearish", filter: 'agSetColumnFilter', hide: true, },
+  { field: "isBullish", filter: 'agSetColumnFilter', hide: true, },
   { field: "symbol", filter: 'agNumberColumnFilter', hide: true, },
   { field: "price", filter: 'agNumberColumnFilter', hide: true, },
-  { field: "rsi", filter: 'agNumberColumnFilter', hide: true, },
-  { field: "DMA_20", filter: 'agNumberColumnFilter', hide: true, },
-  { field: "DMA_50", filter: 'agNumberColumnFilter', hide: true, },
-  { field: "DMA_100", filter: 'agNumberColumnFilter', hide: true, },
-  { field: "DMA_200", filter: 'agNumberColumnFilter', hide: true, },
+  { field: "currentPrice", filter: 'agNumberColumnFilter' },
+  { field: "rsi", filter: 'agNumberColumnFilter', valueFormatter: getPrecisionValue},
+  { field: "DMA_20", filter: 'agNumberColumnFilter', valueFormatter: getPrecisionValue},
+  { field: "DMA_50", filter: 'agNumberColumnFilter',  valueFormatter: getPrecisionValue},
+  { field: "DMA_100", filter: 'agNumberColumnFilter', valueFormatter: getPrecisionValue},
+  { field: "DMA_200", filter: 'agNumberColumnFilter', hide: true, valueFormatter: getPrecisionValue },
   { field: "url", hide: true, },
 ];
 
 const gridOptions = {
     columnDefs: columnDefs,
     rowData: rowData,
+    getRowId: params => params.data.id,
     defaultColDef: {
       flex: 1,
       minWidth: 150,
@@ -72,6 +79,15 @@ const gridOptions = {
           // Cell value is a valid URL, open it in a new tab or window.
           window.open(cellValue, '_blank');
         }
+    },
+    getRowStyle: (params) => {
+      if (params.data){
+        if(params.data.isBearish === "true") {
+          return { background: 'red', 'font-weight': 750 };
+        } else {
+          return { background: 'green', 'font-weight': 750 };
+        }
+      }
     }
 };
 
@@ -140,6 +156,20 @@ socket.on('message', (data) => {
 document.addEventListener('DOMContentLoaded', () => {
   const gridDiv = document.querySelector('#myGrid');
   new agGrid.Grid(gridDiv, gridOptions);
+  setInterval( () =>{
+    gridOptions.api.forEachNode((rowNode ) => {
+        socket.emit('ticker', rowNode.data.symbol );
+    });
+  }, tickerIntervalInMinutes*1000*60)
+
+  socket.on('ticker', ( data ) => {
+      const rowNode = gridOptions.api.getRowNode(data.symbol);
+      rowNode && rowNode.setData({
+          ...rowNode.data,
+          ...data,
+      })
+  });
+
 });
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -156,13 +186,27 @@ document.addEventListener('DOMContentLoaded', () => {
   })
   .then(data => {
     // Handle the JSON data
-    console.log( data );
     cacheGridOptions.api.setRowData(data);
   })
   .catch(error => {
     // Handle errors
     console.error('Fetch error:', error);
   });
+
+  setInterval( () =>{
+    cacheGridOptions.api.forEachNode((rowNode ) => {
+        socket.emit('ticker', rowNode.data.symbol );
+    });
+  }, tickerIntervalInMinutes*1000*60)
+
+  socket.on('ticker', ( data ) => {
+      const rowNode = cacheGridOptions.api.getRowNode(data.symbol);
+      rowNode && rowNode.setData({
+          ...rowNode.data,
+          ...data,
+      })
+  });
+
 });
 
 bearishChangeHTML.onchange = function(){
