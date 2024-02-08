@@ -111,7 +111,7 @@ function onSelectionChanged() {
 function addWatchList() {
     const previousList = JSON.parse(localStorage.getItem( SELECTED_STOCKS_KEY )) || [];
     const newList = gridOptions.api.getSelectedRows().map( ( { symbol, price, DMA_20, DMA_50 } ) => {
-      return { symbol , price, DMA_20, DMA_50 }
+      return { symbol , price, DMA_20, DMA_50, date : new Date().toJSON().slice(0,10) }
       });
     localStorage.setItem(
         SELECTED_STOCKS_KEY,
@@ -153,22 +153,30 @@ socket.on('message', (data) => {
   }
 });
 
+socket.on('disconnect', function(reason){
+  console.log('User 1 disconnected because '+reason);
+});
+
 document.addEventListener('DOMContentLoaded', () => {
   const gridDiv = document.querySelector('#myGrid');
   new agGrid.Grid(gridDiv, gridOptions);
-  setInterval( () =>{
-    gridOptions.api.forEachNode((rowNode ) => {
-        socket.emit('ticker', rowNode.data.symbol );
-    });
-  }, tickerIntervalInMinutes*1000*60)
+  // let index = 0;
+  // interval = 1000*60;
+  // setInterval( () =>{
+  //   gridOptions.api.forEachNode((rowNode ) => {
+  //     setTimeout(function () {
+  //       socket.emit('ticker', rowNode.data.symbol );
+  //     }, index * interval);
+  //   });
+  // }, tickerIntervalInMinutes*1000*60)
 
-  socket.on('ticker', ( data ) => {
-      const rowNode = gridOptions.api.getRowNode(data.symbol);
-      rowNode && rowNode.setData({
-          ...rowNode.data,
-          ...data,
-      })
-  });
+  // socket.on('ticker', ( data ) => {
+  //     const rowNode = gridOptions.api.getRowNode(data.symbol);
+  //     rowNode && rowNode.setData({
+  //         ...rowNode.data,
+  //         ...data,
+  //     })
+  // });
 
 });
 
@@ -193,19 +201,24 @@ document.addEventListener('DOMContentLoaded', () => {
     console.error('Fetch error:', error);
   });
 
-  setInterval( () =>{
-    cacheGridOptions.api.forEachNode((rowNode ) => {
-        socket.emit('ticker', rowNode.data.symbol );
-    });
-  }, tickerIntervalInMinutes*1000*60)
+  // let index = 0;
+  // interval = 1000;
+  // setInterval( () =>{
+  //   cacheGridOptions.api.forEachNode((rowNode ) => {
+  //     index = index + 1;
+  //     setTimeout(function () {
+  //         socket.emit('ticker', rowNode.data.symbol );
+  //     }, index * interval);
+  //   });
+  // }, tickerIntervalInMinutes*1000*60)
 
-  socket.on('ticker', ( data ) => {
-      const rowNode = cacheGridOptions.api.getRowNode(data.symbol);
-      rowNode && rowNode.setData({
-          ...rowNode.data,
-          ...data,
-      })
-  });
+  // socket.on('ticker', ( data ) => {
+  //     const rowNode = cacheGridOptions.api.getRowNode(data.symbol);
+  //     rowNode && rowNode.setData({
+  //         ...rowNode.data,
+  //         ...data,
+  //     })
+  // });
 
 });
 
@@ -219,8 +232,8 @@ bearishChangeHTML.onchange = function(){
 timeDeltaHTML.onchange = function(){
     var value = timeDeltaHTML.value;
     socket.emit( 'timedelta', value);
-    gridOptions.api.setRowData([]);
-    buffer = [];
+    // gridOptions.api.setRowData([]);
+    // buffer = [];
 };
 
 bullishChangeHTML.onchange = function(){

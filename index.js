@@ -14,8 +14,8 @@ const NIFITY_FIFITY = require("./config/share.js");
 const {
     PORT,
     DMA,
-    FININACIAL_SERVER_URL,
-    LIVE_STOCK_URL,
+    SERVER_URL,
+    SERVER_PORT,
     HIT_ROLLBACK,
 } = require("./config/config.js");
 
@@ -28,6 +28,16 @@ let once = true;
 let priceDiff = 1;
 let priceDiffBullish = 5;
 let timeDelta = 1;
+let portIndex = 0;
+
+const getFinancialStockURL = () => {
+    portIndex++;
+    if (portIndex > 7) {
+        portIndex = 0;
+    }
+    return `http://${SERVER_URL}:${SERVER_PORT[portIndex]}/price_diff`;
+}
+
 
 const getAPIData = async (symbol) => {
     if (symbol) {
@@ -37,30 +47,32 @@ const getAPIData = async (symbol) => {
                 console.log(finalAnalytics);
                 return;
             }
-            const currentDataPromise = axios.get(FININACIAL_SERVER_URL, {
+            const currentDataPromise = axios.get(getFinancialStockURL(), {
                 params: {
                     symbol,
                     dma: DMA.join(','),
                     priceDiff,
                     priceDiffBullish,
                     timeDelta,
-                }
+                },
+                timeout: 2000,
+                signal: AbortSignal.timeout(2000)
             })
             Promise.all([currentDataPromise]).then((
                 [
                     { data },
                 ]
             ) => {
-                insert( data )
-                if ( data['isBullish'] || data['isBearish'] ) {
+                insert(data)
+                if (data['isBullish'] || data['isBearish']) {
                     first_response.push(data);
                 }
                 io.emit('message', {
                     ...data,
-                    msg: `Stocks fetched ${index} out of ${NIFITY_FIFITY.length - 1} with hit constant : ${hit_constant} , shortlisted bullish stock ${first_response.filter( ( { isBullish } ) => isBullish === 'true'  ).length}, shortlisted bearish stock ${first_response.filter( ( { isBearish } ) => isBearish === 'true'  ).length} `
+                    msg: `Stocks fetched ${index} out of ${NIFITY_FIFITY.length - 1} with hit constant : ${hit_constant} , shortlisted bullish stock ${first_response.filter(({ isBullish }) => isBullish === 'true').length}, shortlisted bearish stock ${first_response.filter(({ isBearish }) => isBearish === 'true').length} `
                 });
                 if (hit_constant > HIT_ROLLBACK) {
-                    hit_constant = 5;
+                    hit_constant = 0;
                 }
                 index = index + 1;
                 setTimeout(async () => await getAPIData(NIFITY_FIFITY[index]), hit_constant * 1000);
@@ -68,7 +80,7 @@ const getAPIData = async (symbol) => {
                 console.log(cause)
                 hit_constant = hit_constant + 1;
                 if (hit_constant > HIT_ROLLBACK) {
-                    hit_constant = 5;
+                    hit_constant = 0;
                     index = index + 1;
                 }
                 setTimeout(async () => await getAPIData(NIFITY_FIFITY[index]), hit_constant * 1000);
@@ -77,7 +89,7 @@ const getAPIData = async (symbol) => {
             console.log(cause);
             hit_constant = hit_constant + 1;
             if (hit_constant > HIT_ROLLBACK) {
-                hit_constant = 5;
+                hit_constant = 0;
                 index = index + 1;
             }
             setTimeout(async () => await getAPIData(NIFITY_FIFITY[index]), hit_constant * 1000);
@@ -92,27 +104,34 @@ const getAPIData = async (symbol) => {
 
 
 const restart = () => {
-    console.log( "message recieved restart" );
+    console.log("message recieved restart");
     first_response = [];
-    index =0;
+    index = 0;
     hit_constant = 0;
-    (async () => {
-        await getAPIData(NIFITY_FIFITY[index]);
-    })()
 }
 
-const fetchLivePrice = ( symbol ) => {
-    const currentDataPromise = axios.get(LIVE_STOCK_URL, {
+const getLiveStockURL = () => {
+    portIndex++;
+    if (portIndex > 7) {
+        portIndex = 0;
+    }
+    return `http://${SERVER_URL}:${SERVER_PORT[0]}/live`;
+}
+
+const fetchLivePrice = (symbol) => {
+    const currentDataPromise = axios.get(getLiveStockURL(), {
         params: {
             symbol,
-        }
+        },
+        timeout: 2000,
+        signal: AbortSignal.timeout(2000)
     })
     Promise.all([currentDataPromise]).then((
         [
             { data },
         ]
     ) => {
-        console.log( data );
+        console.log(data);
         io.emit('ticker', data)
     }).catch(({ cause }) => {
         console.log(cause);
@@ -122,6 +141,10 @@ const fetchLivePrice = ( symbol ) => {
 io.on('connection', (socket) => {
     io.emit('message', first_response);
 
+    socket.on('disconnect', function (reason) {
+        console.log('User 1 disconnected because ' + reason);
+    });
+
     socket.on('message', (data) => {
         io.emit('message', first_response);
     });
@@ -130,32 +153,32 @@ io.on('connection', (socket) => {
         console.log('A user disconnected');
     });
 
-    socket.on('ticker', ( data ) => {
-        fetchLivePrice( data );
+    socket.on('ticker', (data) => {
+        fetchLivePrice(data);
     })
 
-    socket.on('bullish', ( data )=> {
-        console.log( "message recieved bullish" );
+    socket.on('bullish', (data) => {
+        console.log("message recieved bullish");
         priceDiff = data;
         restart();
     });
 
-    socket.on('timedelta', ( data )=> {
-        console.log( "message recieved bullish" );
-        timeDelta = data;
-        restart();
+    socket.on('timedelta', (data) => {
+        console.log("message recieved bullish");
+        hit_constant = data;
+        //restart();
     });
 
-    socket.on('bearish', ( data )=> {
-        console.log( "message recieved bearish" );
+    socket.on('bearish', (data) => {
+        console.log("message recieved bearish");
         priceDiffBullish = data;
         restart();
     });
 
-    socket.on( 'restart', ()=>{
-        console.log( "message recieved restart" );
+    socket.on('restart', () => {
+        console.log("message recieved restart");
         restart();
-    } )
+    })
 
 });
 
@@ -176,11 +199,34 @@ app.get('/mongoDB', (req, res) => {
     });
 });
 
-// Create a route to fetch data with a filter
-app.get('/api/mongoDB', async (req, res) => {
-    getData( { isBullish : 'true' }, req, res )
+app.get('/healthcheck', (req, res) => {
+    res.send('working')
 });
 
-( async() => {
+app.get('/healthcheckpy', (req, res) => {
+
+    const currentDataPromise = axios.get(getLiveStockURL(), {
+        params: {
+            symbol: 'RELIANCE',
+        }
+    })
+    Promise.all([currentDataPromise]).then((
+        [
+            { data },
+        ]
+    ) => {
+        res.send(data);
+
+    }).catch(({ cause }) => {
+        console.log(cause);
+    })
+});
+
+// Create a route to fetch data with a filter
+app.get('/api/mongoDB', async (req, res) => {
+    getData({ isBullish: 'true' }, req, res)
+});
+
+(async () => {
     await getAPIData(NIFITY_FIFITY[index]);
 })() 

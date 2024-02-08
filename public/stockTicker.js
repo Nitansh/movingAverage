@@ -13,14 +13,15 @@ function getUpdateStocks(){
 }
 
 function diffGetter(params) {
-    if ( !params.data.currentPrice ) {
+    if ( !params.data || !params.data.currentPrice ) {
         return "current price not fetched";
     }
+
     return ( ( ( params.data.currentPrice - params.data.price ) / params.data.price ) * 100 ).toFixed(2) +" % " ;
 }
 
-function getPrecisionValue( params ){
-    return params.value.toFixed(2);;
+function getPrecisionValue( { value } ){
+    return value ? value.toFixed(2) : '';
 }
 
 function getColumnDefs(){
@@ -28,6 +29,7 @@ function getColumnDefs(){
         { field: "id", hide : true },
         { field: "symbol", filter: 'agNumberColumnFilter', checkboxSelection: true },
         { field: "price", filter: 'agNumberColumnFilter' },
+        { field: "date"},
         { field: "percentage", filter: 'agNumberColumnFilter',  valueGetter: diffGetter },
         { field: "currentPrice", filter: 'agNumberColumnFilter' },
         { field: "DMA_20", filter: 'agNumberColumnFilter', valueFormatter: getPrecisionValue },
@@ -80,6 +82,7 @@ function gridOptionsTicker(){
         },
         enableRangeSelection: true,
         rowSelection: 'multiple',
+        rowGroupPanelShow: 'always',
         suppressRowClickSelection: true,
     };
     return tickerGridOptions;
@@ -109,10 +112,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const gridDiv = document.querySelector('#myTickerGrid');
     tickerGridOptions = gridOptionsTicker();
     new agGrid.Grid(gridDiv, tickerGridOptions);
-    
+    let index = 0;
+    const interval = 1000*60;
     setInterval( () =>{
-        tickerGridOptions.api.forEachNode((rowNode ) => {
-            socket.emit('ticker', rowNode.data.symbol );
+        tickerGridOptions.api.forEachNode( (rowNode ) => {
+            index = index + 1;
+            setTimeout(function () {
+                socket.emit('ticker', rowNode.data.symbol );
+            }, index * interval);
         });
     }, tickerIntervalInMinutes*1000*60)
 
