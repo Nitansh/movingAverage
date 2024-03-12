@@ -35,6 +35,9 @@ const getFinancialStockURL = () => {
     if (portIndex > 7) {
         portIndex = 0;
     }
+    if ( SERVER_PORT[portIndex] === undefined ){
+        portIndex = 0;
+    }
     return `http://${SERVER_URL}:${SERVER_PORT[portIndex]}/price_diff`;
 }
 
@@ -71,12 +74,10 @@ const getAPIData = async (symbol) => {
                     ...data,
                     msg: `Stocks fetched ${index} out of ${NIFITY_FIFITY.length - 1} with hit constant : ${hit_constant} , shortlisted bullish stock ${first_response.filter(({ isBullish }) => isBullish === 'true').length}, shortlisted bearish stock ${first_response.filter(({ isBearish }) => isBearish === 'true').length} `
                 });
-                if (hit_constant > HIT_ROLLBACK) {
-                    hit_constant = 0;
-                }
+                hit_constant = 0;
                 index = index + 1;
                 setTimeout(async () => await getAPIData(NIFITY_FIFITY[index]), hit_constant * 1000);
-            }).catch(({ cause }) => {
+            }).catch(( cause ) => {
                 console.log(cause)
                 hit_constant = hit_constant + 1;
                 if (hit_constant > HIT_ROLLBACK) {
@@ -85,7 +86,7 @@ const getAPIData = async (symbol) => {
                 }
                 setTimeout(async () => await getAPIData(NIFITY_FIFITY[index]), hit_constant * 1000);
             })
-        } catch ({ cause }) {
+        } catch ( cause ) {
             console.log(cause);
             hit_constant = hit_constant + 1;
             if (hit_constant > HIT_ROLLBACK) {
