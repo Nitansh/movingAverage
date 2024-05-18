@@ -21,16 +21,17 @@ const columnDefs = [
   { field: "name", checkboxSelection: true},
   { field: "mcap", filter: 'agNumberColumnFilter' },
   { field: "isBearish", filter: 'agSetColumnFilter', hide: true, },
-  { field: "isBullish", filter: 'agSetColumnFilter', hide: true, },
+  { field: "isBullish", filter: 'agSetColumnFilter' },
   { field: "symbol", filter: 'agNumberColumnFilter', hide: true, },
-  { field: "price", filter: 'agNumberColumnFilter', hide: true, },
-  { field: "currentPrice", filter: 'agNumberColumnFilter' },
+  { field: "price", filter: 'agNumberColumnFilter',  },
+  { field: "currentPrice", filter: 'agNumberColumnFilter', hide: true, },
   { field: "rsi", filter: 'agNumberColumnFilter', valueFormatter: getPrecisionValue},
   { field: "DMA_20", filter: 'agNumberColumnFilter', valueFormatter: getPrecisionValue},
   { field: "DMA_50", filter: 'agNumberColumnFilter',  valueFormatter: getPrecisionValue},
   { field: "DMA_100", filter: 'agNumberColumnFilter', valueFormatter: getPrecisionValue},
   { field: "DMA_200", filter: 'agNumberColumnFilter', hide: true, valueFormatter: getPrecisionValue },
   { field: "url", hide: true, },
+  { field : "chart", hide: true },
 ];
 
 const gridOptions = {
@@ -73,9 +74,8 @@ const gridOptions = {
     rowSelection: 'multiple',
     suppressRowClickSelection: true,
     onCellDoubleClicked: function (params) {
-        const urlRegex = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/;
         const cellValue = params.value;
-        if (urlRegex.test(cellValue)) {
+        if (cellValue.includes('http') ) {
           // Cell value is a valid URL, open it in a new tab or window.
           window.open(cellValue, '_blank');
         }
