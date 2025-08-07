@@ -4,6 +4,7 @@ const http = require('http');
 const socketIO = require('socket.io');
 
 const fs = require('fs');
+const os = require('os');
 
 const app = express();
 const server = http.createServer(app);
@@ -29,6 +30,7 @@ let priceDiff = 1;
 let priceDiffBullish = 5;
 let timeDelta = 1;
 let portIndex = 0;
+const MapPortSuccess = {}
 
 const getFinancialStockURL = () => {
     portIndex++;
@@ -39,6 +41,40 @@ const getFinancialStockURL = () => {
         portIndex = 0;
     }
     return `http://${SERVER_URL}:${SERVER_PORT[portIndex]}/price_diff`;
+}
+
+function incrementPortCount(url) {
+  const port = new URL(url).port;
+
+  if (MapPortSuccess[port]) {
+    MapPortSuccess[port] += 1;
+  } else {
+    MapPortSuccess[port] = 1;
+  }
+}
+
+const formatError = ( error ) => {
+    if (axios.isAxiosError(error)) {
+    console.error("-----------------------------------------------------------------------------");
+    const status = error.response?.status || 'N/A';
+    const message = error.message || 'No message';
+    const baseUrl = new URL(error.config?.url || 'Unknown');
+    const params = error.config?.params || {};
+    const responseData = error.response?.data || '[No response data]';
+    incrementPortCount( baseUrl );
+    console.error('❌ Axios Request Failed');
+    console.error('Status      :', status);
+    console.error('Message     :', message);
+    console.error('Symbol      :', params.symbol);
+    console.error('Response    :', responseData);
+    console.error('Matrix      :', MapPortSuccess);
+    console.error("-----------------------------------------------------------------------------");
+    // Optional: Log full error for deep debugging
+    // console.error(error);
+    
+  } else {
+    console.error('❌ Unknown error:', error);
+  }
 }
 
 
@@ -78,7 +114,7 @@ const getAPIData = async (symbol) => {
                 index = index + 1;
                 setTimeout(async () => await getAPIData(NIFITY_FIFITY[index]), hit_constant * 1000);
             }).catch(( cause ) => {
-                console.log(cause)
+                formatError( cause );
                 hit_constant = hit_constant + 1;
                 if (hit_constant > HIT_ROLLBACK) {
                     hit_constant = 0;
@@ -87,7 +123,7 @@ const getAPIData = async (symbol) => {
                 setTimeout(async () => await getAPIData(NIFITY_FIFITY[index]), hit_constant * 1000);
             })
         } catch ( cause ) {
-            console.log(cause);
+            formatError( cause );
             hit_constant = hit_constant + 1;
             if (hit_constant > HIT_ROLLBACK) {
                 hit_constant = 0;
@@ -135,7 +171,7 @@ const fetchLivePrice = (symbol) => {
         console.log(data);
         io.emit('ticker', data)
     }).catch(({ cause }) => {
-        console.log(cause);
+        formatError(cause);
     })
 }
 
@@ -188,6 +224,11 @@ server.listen(PORT, () => {
 });
 
 
+app.get('/getHostName', (req, res) => {
+    res.send( os.hostname() );
+});
+
+
 app.get('/', (req, res) => {
     fs.readFile(__dirname + '/public/index.html', 'utf8', (err, text) => {
         res.send(text);
@@ -219,7 +260,7 @@ app.get('/healthcheckpy', (req, res) => {
         res.send(data);
 
     }).catch(({ cause }) => {
-        console.log(cause);
+        formatError(cause);
     })
 });
 

@@ -8,5 +8,5 @@ module.exports = {
     LIVE_STOCK_URL : `http://${SERVER_URL}:${SERVER_PORT[0]}/live`,
     SERVER_URL,
     SERVER_PORT,
-    HIT_ROLLBACK: 3
+    HIT_ROLLBACK: 6
 }
